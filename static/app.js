@@ -1,7 +1,28 @@
+Vue.component('todo-item', {
+  props: ['todo'],
+  template: `
+    <li :class="{ 'line-through': todo.completed }" class="bg-gray-100 p-2 rounded-lg">
+      <span>
+        <i @click="toggleCompleted" :class="['fas', todo.completed ? 'fa-check-circle' : 'fa-circle', 'mr-2', 'cursor-pointer']"></i>
+        <i @click="deleteTodo" class="fas fa-trash-alt"></i>
+        {{ todo.text }}
+      </span>
+    </li>
+  `,
+  methods: {
+    deleteTodo() {
+      this.$emit('delete-todo');
+    },
+    toggleCompleted() {
+      this.$emit('toggle-completed');
+    },
+  },
+});
+
 Vue.component('todo-list', {
+  props: ['listName', 'todos'],
   data() {
     return {
-      todos: [],
       newTodo: '',
     };
   },
@@ -20,44 +41,106 @@ Vue.component('todo-list', {
       this.todos[index].completed = !this.todos[index].completed;
     },
   },
-  created() {
-    const storedTodos = localStorage.getItem('todos');
-    if (storedTodos) {
-      this.todos = JSON.parse(storedTodos);
-    }
-  },
-  watch: {
-    todos: {
-      handler() {
-        localStorage.setItem('todos', JSON.stringify(this.todos));
-      },
-      deep: true,
-    },
-  },
   template: `
-    <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold mb-4">Todo App</h1>
+    <div class="bg-gray-100 p-2 rounded-lg">
+      <h2 class="text-xl font-bold mb-2">{{ listName }}</h2>
       <div class="mb-4 flex items-center">
         <input type="text" v-model="newTodo" @keyup.enter="addTodo" placeholder="Enter new todo" class="flex-1 px-4 py-2 border rounded-lg">
         <button @click="addTodo" class="px-4 py-2 ml-2 bg-blue-500 text-white rounded-lg">
-          <i class="fas fa-plus"></i> <!-- Font Awesome Add Icon -->
+          <i class="fas fa-plus"></i>
         </button>
       </div>
       <ul class="space-y-2">
-        <li v-for="(todo, index) in todos" :key="index" :class="{ 'line-through': todo.completed }" class="bg-gray-100 p-2 rounded-lg">
-          <span>
-            <i @click="toggleCompleted(index)" :class="['fas', todo.completed ? 'fa-check-circle' : 'fa-circle', 'mr-2', 'cursor-pointer']"></i>
-            <i @click="deleteTodo(index)" class="fas fa-trash-alt"></i>
-            {{ todo.text }}
-          </span>
-        </li>
+        <todo-item
+          v-for="(todo, index) in todos"
+          :key="index"
+          :todo="todo"
+          @delete-todo="deleteTodo(index)"
+          @toggle-completed="toggleCompleted(index)"
+        ></todo-item>
       </ul>
     </div>
   `,
 });
 
-// Create the Vue instance
+Vue.component('board', {
+  data() {
+    return {
+      boardName: 'My Board',
+      lists: [
+        {
+          listName: 'List 1',
+          todos: [
+            { text: 'Todo 1 for List 1', completed: false },
+            { text: 'Todo 2 for List 1', completed: true },
+            { text: 'Todo 3 for List 1', completed: false },
+          ],
+        },
+        {
+          listName: 'List 2',
+          todos: [
+            { text: 'Todo 1 for List 2', completed: true },
+            { text: 'Todo 2 for List 2', completed: false },
+            { text: 'Todo 3 for List 2', completed: true },
+          ],
+        },
+        {
+          listName: 'List 3',
+          todos: [
+            { text: 'Todo 1 for List 3', completed: false },
+            { text: 'Todo 2 for List 3', completed: false },
+            { text: 'Todo 3 for List 3', completed: true },
+          ],
+        },
+      ],
+      newListName: '',
+    };
+  },
+  methods: {
+    addList() {
+      if (this.newListName) {
+        this.lists.push({
+          listName: this.newListName,
+          todos: [],
+        });
+        this.newListName = '';
+      }
+    },
+  },
+  template: `
+    <div>
+      <h1 class="text-3xl font-bold mb-4">{{ boardName }}</h1>
+      <div class="mt-4 mb-4">
+        <input
+          type="text"
+          v-model="newListName"
+          @keyup.enter="addList"
+          placeholder="Enter new list name"
+          class="px-4 py-2 border rounded-lg"
+        >
+        <button @click="addList" class="px-4 py-2 ml-2 bg-blue-500 text-white rounded-lg">
+          Add List
+        </button>
+      </div>
+      
+      <div class="flex space-x-4">
+        <todo-list
+          v-for="(list, index) in lists"
+          :key="index"
+          :listName="list.listName"
+          :todos="list.todos"
+        ></todo-list>
+      </div>
+      
+    </div>
+  `,
+});
+
 new Vue({
   el: '#app',
-  template: `<todo-list></todo-list>`,
+  template: `
+    <div class="container mx-auto px-4 py-8">
+      <board></board>
+    </div>
+  `,
 });
