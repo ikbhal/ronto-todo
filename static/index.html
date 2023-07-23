@@ -17,14 +17,13 @@
             </button>
         </div>
         <ul class="space-y-2">
-            <li v-for="(todo, index) in todos" :key="index" :class="{ 'line-through': todo.completed }" class="bg-gray-100 p-4 rounded-lg">
+            <li v-for="(todo, index) in todos" :key="index" :class="{ 'line-through': todo.completed }" class="bg-gray-100 p-2 rounded-lg">
                 <span>
-                    <i @click="toggleCompleted(index)" :class="['fas', todo.completed ? 'fa-check-circle' : 'fa-circle', 'mr-2', 'cursor-pointer']"></i> <!-- Font Awesome Checkbox Icon -->
+                    <i @click="toggleCompleted(index)" :class="['fas', todo.completed ? 'fa-check-circle' : 'fa-circle', 'mr-2', 'cursor-pointer']"></i> 
+                    <i @click="deleteTodo(index)"  class="fas fa-trash-alt"></i>
                     {{ todo.text }}
                 </span>
-                <button @click="deleteTodo(index)" class="px-4 py-2 ml-2 bg-red-500 text-white rounded-lg">
-                    <i class="fas fa-trash-alt"></i> <!-- Font Awesome Delete Icon -->
-                </button>
+            
             </li>
         </ul>
     </div>
