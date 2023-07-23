@@ -106,11 +106,45 @@ Vue.component('board', {
         this.newListName = '';
       }
     },
+    deleteList(index) {
+      this.lists.splice(index, 1);
+    },
+    saveBoard() {
+      const boardData = {
+        boardName: this.boardName,
+        lists: this.lists,
+      };
+      localStorage.setItem('boardData', JSON.stringify(boardData));
+      alert('Board saved successfully!');
+    },
+    exportBoard() {
+      const boardData = {
+        boardName: this.boardName,
+        lists: this.lists,
+      };
+      const jsonData = JSON.stringify(boardData, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'board_data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+  },
+  created() {
+    const savedData = localStorage.getItem('boardData');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      this.boardName = parsedData.boardName;
+      this.lists = parsedData.lists;
+      alert('Board data loaded from local storage.');
+    }
   },
   template: `
     <div>
       <h1 class="text-3xl font-bold mb-4">{{ boardName }}</h1>
-      <div class="mt-4 mb-4">
+      <div class="flex mb-4">
         <input
           type="text"
           v-model="newListName"
@@ -121,6 +155,12 @@ Vue.component('board', {
         <button @click="addList" class="px-4 py-2 ml-2 bg-blue-500 text-white rounded-lg">
           Add List
         </button>
+        <button @click="saveBoard" class="px-4 py-2 ml-2 bg-green-500 text-white rounded-lg">
+          Save Board
+        </button>
+        <button @click="exportBoard" class="px-4 py-2 ml-2 bg-yellow-500 text-white rounded-lg">
+          Export Board
+        </button>
       </div>
       
       <div class="flex space-x-4">
@@ -129,6 +169,7 @@ Vue.component('board', {
           :key="index"
           :listName="list.listName"
           :todos="list.todos"
+          @delete-list="deleteList(index)"
         ></todo-list>
       </div>
       
