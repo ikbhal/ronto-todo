@@ -94,28 +94,14 @@ Vue.component('todo-list', {
 });
 
 Vue.component('board', {
+  props: ['boardData'],
   data() {
     return {
-      boardName: 'My Board',
-      lists: [
-        {
-          listName: 'List 1',
-          todos: [
-            { text: 'Todo 1 for List 1', completed: false },
-            { text: 'Todo 2 for List 1', completed: true },
-            { text: 'Todo 3 for List 1', completed: false },
-          ],
-        },
-        {
-          listName: 'List 2',
-          todos: [
-            { text: 'Todo 1 for List 2', completed: true },
-            { text: 'Todo 2 for List 2', completed: false },
-            { text: 'Todo 3 for List 2', completed: true },
-          ],
-        },
+      boardName: this.boardData ? this.boardData.boardName : 'My Board',
+      lists: this.boardData ? this.boardData.lists : [
+        { listName: 'List 1', todos: [] },
       ],
-      newBoardName: '',
+      newListName: '',
       editMode: false,
     };
   },
@@ -178,6 +164,23 @@ Vue.component('board', {
         this.editMode = false;
       }
     },
+    loadBoard(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        try {
+          const boardData = JSON.parse(reader.result);
+          this.boardName = boardData.boardName;
+          this.lists = boardData.lists;
+          alert('Board loaded successfully!');
+        } catch (error) {
+          alert('Error loading board. Please make sure the file is a valid JSON.');
+        }
+      };
+
+      reader.readAsText(file);
+    },
   },
   template: `
     <div>
@@ -197,6 +200,10 @@ Vue.component('board', {
           </button>
           <button @click="exportBoard" class="px-4 py-2 ml-2 bg-green-500 text-white rounded-lg">
             Export Board
+          </button>
+          <input type="file" @change="loadBoard" accept=".json" class="hidden">
+          <button @click="$refs.fileInput.click()" class="px-4 py-2 ml-2 bg-yellow-500 text-white rounded-lg">
+            Load Board
           </button>
         </div>
       </nav>
@@ -218,9 +225,31 @@ Vue.component('board', {
 
 new Vue({
   el: '#app',
+  data() {
+    return {
+      loading: true,
+      boardData: null,
+    };
+  },
+  mounted() {
+    this.loadSavedBoard();
+    this.loading = false;
+  },
+  methods: {
+    loadSavedBoard() {
+      const savedBoard = localStorage.getItem('board');
+      if (savedBoard) {
+        try {
+          this.boardData = JSON.parse(savedBoard);
+        } catch (error) {
+          console.error('Error loading saved board:', error);
+        }
+      }
+    },
+  },
   template: `
     <div class="container mx-auto px-4 py-8">
-      <board></board>
+      <board v-if="!loading" :boardData="boardData" ref="board"></board>
     </div>
   `,
 });
